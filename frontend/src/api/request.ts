@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { tokenStorage } from '../utils/token';
 
 /**
  * 后端统一响应结构
@@ -14,6 +15,33 @@ const baseURL = import.meta.env.PROD ? '' : 'http://localhost:8080';
 const instance: AxiosInstance = axios.create({
   baseURL,
   timeout: 60000,
+});
+
+// Token 刷新状态管理
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (error: Error) => void;
+}> = [];
+
+const processQueue = (error: Error | null, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token!);
+    }
+  });
+  failedQueue = [];
+};
+
+// 请求拦截器：附加 Authorization header
+instance.interceptors.request.use((config) => {
+  const token = tokenStorage.getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 /**
@@ -41,7 +69,63 @@ instance.interceptors.response.use(
     // 非 Result 格式，直接返回
     return response;
   },
-  (error) => {
+  async (error) => {
+    // 处理 401 错误：尝试刷新 Token
+    if (error.response?.status === 401) {
+      const originalRequest = error.config;
+
+      // 如果是刷新 Token 请求本身失败，强制登出
+      if (originalRequest.url?.includes('/api/auth/refresh')) {
+        tokenStorage.clearTokens();
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+
+      // 如果还没有重试过
+      if (!originalRequest._retry) {
+        if (isRefreshing) {
+          // 正在刷新中，将请求加入队列
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          }).then(token => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return instance(originalRequest);
+          });
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        const refreshToken = tokenStorage.getRefreshToken();
+        if (!refreshToken) {
+          tokenStorage.clearTokens();
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+
+        try {
+          const response = await axios.post(`${baseURL}/api/auth/refresh`, { refreshToken });
+          const result = response.data as Result;
+          if (result.code === 200) {
+            const { accessToken, refreshToken: newRefreshToken } = result.data;
+            tokenStorage.setTokens(accessToken, newRefreshToken);
+            processQueue(null, accessToken);
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+            return instance(originalRequest);
+          } else {
+            throw new Error(result.message || '刷新Token失败');
+          }
+        } catch (refreshError) {
+          processQueue(refreshError as Error);
+          tokenStorage.clearTokens();
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      }
+    }
+
     // 有响应的情况：后端返回了结果（即使是错误）
     if (error.response) {
       const { data } = error.response;
@@ -55,8 +139,6 @@ instance.interceptors.response.use(
     }
 
     // 没有响应的情况：真正的网络错误或连接被重置
-    // 对于文件上传，可能是网络超时或连接中断，但不一定是文件大小问题
-    // 让后端返回真实的错误信息，而不是在这里假设
     const config = error.config;
     const isUpload = config && (
       config.url?.includes('/upload') ||
@@ -64,8 +146,6 @@ instance.interceptors.response.use(
     );
 
     if (isUpload) {
-      // 文件上传失败且没有响应，可能是网络超时或连接中断
-      // 不直接假设是文件大小问题，返回更通用的错误信息
       return Promise.reject(new Error('上传失败，可能是网络超时或连接中断，请重试'));
     }
 

@@ -79,7 +79,18 @@ public enum ErrorCode {
     MODULE_NOT_FOUND(11008, "模块不存在"),
     VOICE_CONFIG_READ_FAILED(11009, "读取语音服务配置失败"),
     VOICE_CONFIG_WRITE_FAILED(11010, "写入语音服务配置失败"),
-    VOICE_CONFIG_TEST_FAILED(11011, "语音服务连通性测试失败");
+    VOICE_CONFIG_TEST_FAILED(11011, "语音服务连通性测试失败"),
+
+    // ========== 认证授权模块错误 12xxx ==========
+    USER_NOT_FOUND(12001, "用户不存在"),
+    USER_ALREADY_EXISTS(12002, "用户已存在"),
+    INVALID_CREDENTIALS(12003, "用户名或密码错误"),
+    TOKEN_EXPIRED(12004, "Token已过期"),
+    TOKEN_INVALID(12005, "Token无效"),
+    TOKEN_BLACKLISTED(12006, "Token已被注销"),
+    REFRESH_TOKEN_INVALID(12007, "刷新Token无效或已过期"),
+    PASSWORD_MISMATCH(12008, "旧密码不正确"),
+    EMAIL_ALREADY_EXISTS(12009, "邮箱已被注册");
 
     private final Integer code;
     private final String message;

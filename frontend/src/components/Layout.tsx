@@ -1,9 +1,10 @@
 import {Link, Outlet, useLocation, useNavigate} from 'react-router-dom';
 import {motion} from 'framer-motion';
-import {Calendar, ChevronRight, Database, FileStack, MessageSquare, Moon, Settings, Sparkles, Sun, Users,} from 'lucide-react';
+import {Calendar, ChevronRight, Database, FileStack, LogOut, MessageSquare, Moon, Settings, Sparkles, Sun, User, Users,} from 'lucide-react';
 import {useTheme} from '../hooks/useTheme';
 import {useState} from 'react';
 import UnifiedInterviewModal, {UnifiedInterviewConfig} from './UnifiedInterviewModal';
+import {useAuth} from '../contexts/AuthContext';
 
 interface NavItem {
   id: string;
@@ -24,6 +25,7 @@ export default function Layout() {
   const currentPath = location.pathname;
   const {theme, toggleTheme} = useTheme();
   const navigate = useNavigate();
+  const {user, logout} = useAuth();
   const [interviewModalPreset, setInterviewModalPreset] = useState<{
     defaultMode: 'text' | 'voice';
     defaultResumeId?: number;
@@ -218,12 +220,28 @@ export default function Layout() {
           </div>
         </nav>
 
-        {/* 底部信息 */}
+        {/* 底部用户信息 */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-700">
-          <div className="px-3 py-2 bg-gradient-to-r from-primary-50 to-indigo-50 dark:from-primary-900/30 dark:to-slate-800 rounded-xl">
-            <p className="text-xs text-primary-600 dark:text-primary-400 font-medium">AI 面试助手 v1.0</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Powered by AI</p>
+          <div className="flex items-center gap-3 px-3 py-2 mb-2">
+            <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/50 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-800 dark:text-white truncate">
+                {user?.nickname || user?.username || '用户'}
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 truncate">
+                {user?.roles?.includes('ROLE_ADMIN') ? '管理员' : '用户'}
+              </p>
+            </div>
           </div>
+          <button
+            onClick={() => logout()}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>退出登录</span>
+          </button>
         </div>
       </aside>
 

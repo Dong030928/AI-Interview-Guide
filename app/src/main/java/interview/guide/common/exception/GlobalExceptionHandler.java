@@ -4,6 +4,9 @@ import interview.guide.common.result.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -145,6 +148,36 @@ public class GlobalExceptionHandler {
     public Result<Void> handleHttpRequestMethodNotSupportedException(org.springframework.web.HttpRequestMethodNotSupportedException e) {
         log.warn("请求方法不支持: {} {}", e.getMethod(), e.getSupportedHttpMethods());
         return Result.error(ErrorCode.METHOD_NOT_ALLOWED, "请求方法不支持: " + e.getMethod());
+    }
+
+    /**
+     * 处理权限不足异常
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public Result<Void> handleAccessDeniedException(AccessDeniedException e) {
+        log.warn("权限不足: {}", e.getMessage());
+        return Result.error(ErrorCode.FORBIDDEN);
+    }
+
+    /**
+     * 处理认证失败异常
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public Result<Void> handleAuthenticationException(AuthenticationException e) {
+        log.warn("认证失败: {}", e.getMessage());
+        return Result.error(ErrorCode.UNAUTHORIZED);
+    }
+
+    /**
+     * 处理用户不存在异常
+     */
+    @ExceptionHandler(UsernameNotFoundException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public Result<Void> handleUsernameNotFoundException(UsernameNotFoundException e) {
+        log.warn("用户不存在: {}", e.getMessage());
+        return Result.error(ErrorCode.USER_NOT_FOUND);
     }
 
     /**
