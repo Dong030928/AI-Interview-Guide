@@ -42,7 +42,7 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:interview_guide}
     username: ${POSTGRES_USER:postgres}
     # 与根目录 docker-compose.yml 中 postgres 服务默认一致（本地只起依赖容器 + bootRun 时无需改）
-    password: ${POSTGRES_PASSWORD:password}
+    password: ${POSTGRES_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -67,6 +67,7 @@ spring:
       config: |
         singleServerConfig:
           address: "redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}"
+          password: "${REDIS_PASSWORD:123456}"
           database: 0
           connectionMinimumIdleSize: 10
           connectionPoolSize: 64
@@ -183,8 +184,8 @@ app:
   # RustFS (S3兼容) 存储配置
   storage:
     endpoint: ${APP_STORAGE_ENDPOINT:http://localhost:9000}
-    access-key: ${APP_STORAGE_ACCESS_KEY:minioadmin}
-    secret-key: ${APP_STORAGE_SECRET_KEY:minioadmin}
+    access-key: ${APP_STORAGE_ACCESS_KEY:u3WmC4hQypxKTbVIuJUw}
+    secret-key: ${APP_STORAGE_SECRET_KEY:VSRy0T83LRzcs43iUGNUlOYaYcTELHgwrTDlRrqb}
     bucket: ${APP_STORAGE_BUCKET:interview-guide}
     region: ${APP_STORAGE_REGION:us-east-1}
   

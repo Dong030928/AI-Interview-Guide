@@ -8,6 +8,7 @@ import org.springframework.ai.model.openai.autoconfigure.OpenAiImageAutoConfigur
 import org.springframework.ai.model.openai.autoconfigure.OpenAiModerationAutoConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -26,6 +27,15 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class App {
 
     public static void main(String[] args) {
-        SpringApplication.run(App.class, args);
+        ConfigurableApplicationContext ctx = SpringApplication.run(App.class, args);
+
+        String apiKey = ctx.getEnvironment().getProperty("app.ai.providers.dashscope.api-key");
+        String model = ctx.getEnvironment().getProperty("app.ai.providers.dashscope.model");
+        String baseUrl = ctx.getEnvironment().getProperty("app.ai.providers.dashscope.base-url");
+
+        System.out.println("dashscope apiKey = " +
+                (apiKey == null ? "null" : apiKey.substring(0, Math.min(8, apiKey.length())) + "****"));
+        System.out.println("dashscope model = " + model);
+        System.out.println("dashscope baseUrl = " + baseUrl);
     }
 }
