@@ -3,9 +3,10 @@ import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Settings, Plus, Trash2, Plug, CheckCircle, XCircle,
-  Loader2, Eye, EyeOff, RefreshCw, Server, Edit2, Mic, Volume2, ChevronDown, Database,
+  Loader2, Eye, EyeOff, RefreshCw, Server, Edit2, Mic, Volume2, ChevronDown, Database, Lock, ShieldCheck,
 } from 'lucide-react';
 import { llmProviderApi } from '../api/llmProvider';
+import { authApi } from '../api/auth';
 import ConfirmDialog from '../components/ConfirmDialog';
 import type {
   ProviderItem, CreateProviderRequest, UpdateProviderRequest,
@@ -203,6 +204,55 @@ export default function SettingsPage() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
+
+  // 修改密码状态
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+
+  const handleChangePassword = async () => {
+    setPasswordError('');
+
+    if (!oldPassword.trim()) {
+      setPasswordError('请输入旧密码');
+      return;
+    }
+    if (!newPassword.trim()) {
+      setPasswordError('请输入新密码');
+      return;
+    }
+    if (newPassword.length < 6 || newPassword.length > 100) {
+      setPasswordError('新密码长度需为 6-100 个字符');
+      return;
+    }
+    if (newPassword === oldPassword) {
+      setPasswordError('新密码不能与旧密码相同');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('两次输入的新密码不一致');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await authApi.changePassword({ oldPassword: oldPassword.trim(), newPassword: newPassword.trim() });
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordError('');
+      showToast('密码修改成功');
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : '密码修改失败');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   const isGlobalDefaultProvider = useCallback((providerId: string) => (
     defaultProviderId === providerId
@@ -551,6 +601,134 @@ export default function SettingsPage() {
           <div>
             <h1 className="text-2xl font-bold text-slate-800 dark:text-white">系统设置</h1>
             <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-sm">管理聊天模型、向量模型和模块配置</p>
+          </div>
+        </div>
+      </div>
+
+      {/* 修改密码 */}
+      <div className="mb-8">
+        <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4">
+          账号安全
+        </h2>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300">
+              <ShieldCheck className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-white">修改密码</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">定期更换密码可以提高账号安全性</p>
+            </div>
+          </div>
+
+          <div className="space-y-4 max-w-sm">
+            {/* 旧密码 */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                旧密码
+              </label>
+              <div className="relative">
+                <input
+                  type={showOldPassword ? 'text' : 'password'}
+                  value={oldPassword}
+                  onChange={(e) => { setOldPassword(e.target.value); setPasswordError(''); }}
+                  placeholder="输入当前密码"
+                  className="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 dark:border-slate-600
+                    bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white
+                    placeholder:text-slate-400 focus:outline-none focus:ring-2
+                    focus:ring-primary-500/50 focus:border-primary-400 transition-shadow"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOldPassword(!showOldPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400
+                    hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                >
+                  {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* 新密码 */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                新密码
+              </label>
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); }}
+                  placeholder="6-100 个字符"
+                  className="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 dark:border-slate-600
+                    bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white
+                    placeholder:text-slate-400 focus:outline-none focus:ring-2
+                    focus:ring-primary-500/50 focus:border-primary-400 transition-shadow"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400
+                    hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* 确认新密码 */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                确认新密码
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(''); }}
+                  placeholder="再次输入新密码"
+                  className="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 dark:border-slate-600
+                    bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white
+                    placeholder:text-slate-400 focus:outline-none focus:ring-2
+                    focus:ring-primary-500/50 focus:border-primary-400 transition-shadow"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400
+                    hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* 错误提示 */}
+            {passwordError && (
+              <p className="text-sm text-red-500 dark:text-red-400">{passwordError}</p>
+            )}
+
+            {/* 提交按钮 */}
+            <button
+              onClick={handleChangePassword}
+              disabled={changingPassword}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm
+                bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25
+                hover:from-primary-600 hover:to-primary-700 transition-all
+                disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {changingPassword ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  修改中...
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  修改密码
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

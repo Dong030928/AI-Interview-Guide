@@ -40,3 +40,8 @@ export interface RegisterRequest {
   email?: string;
   nickname?: string;
 }
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+}
