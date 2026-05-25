@@ -1,6 +1,6 @@
 import {Link, Outlet, useLocation, useNavigate} from 'react-router-dom';
 import {motion} from 'framer-motion';
-import {Calendar, ChevronRight, Database, FileStack, LogOut, MessageSquare, Moon, Settings, Sparkles, Sun, User, Users,} from 'lucide-react';
+import {Activity, Calendar, ChevronRight, Database, FileStack, LogOut, MessageSquare, Moon, Settings, Sparkles, Sun, User, Users,} from 'lucide-react';
 import {useTheme} from '../hooks/useTheme';
 import {useState} from 'react';
 import UnifiedInterviewModal, {UnifiedInterviewConfig} from './UnifiedInterviewModal';
@@ -106,6 +106,9 @@ export default function Layout() {
       title: '系统',
       items: [
         { id: 'settings', path: '/settings', label: '设置', icon: Settings, description: '管理模型和语音服务' },
+        ...(user?.roles?.includes('ROLE_ADMIN')
+          ? [{ id: 'monitor', path: '/admin/monitor', label: '系统监控', icon: Activity, description: '日志、告警、健康检查' }]
+          : []),
       ],
     },
   ];

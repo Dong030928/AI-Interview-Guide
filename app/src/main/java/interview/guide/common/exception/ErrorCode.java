@@ -90,7 +90,12 @@ public enum ErrorCode {
     TOKEN_BLACKLISTED(12006, "Token已被注销"),
     REFRESH_TOKEN_INVALID(12007, "刷新Token无效或已过期"),
     PASSWORD_MISMATCH(12008, "旧密码不正确"),
-    EMAIL_ALREADY_EXISTS(12009, "邮箱已被注册");
+    EMAIL_ALREADY_EXISTS(12009, "邮箱已被注册"),
+
+    // ========== 监控告警模块错误 13xxx ==========
+    MONITOR_RULE_NOT_FOUND(13001, "告警规则不存在"),
+    MONITOR_RULE_ALREADY_EXISTS(13002, "告警规则已存在"),
+    MONITOR_QUERY_FAILED(13003, "日志查询失败");
 
     private final Integer code;
     private final String message;

@@ -27,6 +27,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // PostgreSQL
     runtimeOnly 'org.postgresql:postgresql'
@@ -76,6 +77,9 @@ dependencies {
 
     // Jakarta annotation for Java 21+ (replaces javax.annotation)
     implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+
+    // Logstash Logback Encoder - structured JSON logging
+    implementation libs.logstash.logback.encoder
 
     // Lombok
     compileOnly libs.lombok

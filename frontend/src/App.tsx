@@ -29,6 +29,7 @@ const InterviewSchedulePage = lazy(() => import('./pages/InterviewSchedulePage')
 const InterviewHubPage = lazy(() => import('./pages/InterviewHubPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const InterviewDetailPanel = lazy(() => import('./components/InterviewDetailPanel'));
+const MonitorPage = lazy(() => import('./pages/MonitorPage'));
 
 // Loading component
 const Loading = () => (
@@ -225,6 +226,9 @@ function App() {
 
               {/* 设置 */}
               <Route path="settings" element={<SettingsPage />} />
+
+              {/* 系统监控 */}
+              <Route path="admin/monitor" element={<MonitorPage />} />
 
               {/* 问答助手（知识库聊天） */}
               <Route path="knowledgebase/chat" element={<KnowledgeBaseQueryPageWrapper />} />

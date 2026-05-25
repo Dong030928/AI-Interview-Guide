@@ -32,10 +32,12 @@ public class App {
         String apiKey = ctx.getEnvironment().getProperty("app.ai.providers.dashscope.api-key");
         String model = ctx.getEnvironment().getProperty("app.ai.providers.dashscope.model");
         String baseUrl = ctx.getEnvironment().getProperty("app.ai.providers.dashscope.base-url");
+        String webhookUrl = ctx.getEnvironment().getProperty("app.monitor.notification.webhook-url");
 
         System.out.println("dashscope apiKey = " +
                 (apiKey == null ? "null" : apiKey.substring(0, Math.min(8, apiKey.length())) + "****"));
         System.out.println("dashscope model = " + model);
         System.out.println("dashscope baseUrl = " + baseUrl);
+        System.out.println("DingDing robot webhook url = " + webhookUrl);
     }
 }

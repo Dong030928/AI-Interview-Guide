@@ -1,6 +1,9 @@
 package interview.guide.common.exception;
 
 import interview.guide.common.result.Result;
+import interview.guide.modules.monitor.model.OperationEventType;
+import interview.guide.modules.monitor.service.OperationLogService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -24,9 +27,11 @@ import java.util.stream.Collectors;
  * 全局异常处理器
  */
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
-    
+
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final OperationLogService operationLogService;
     
     /**
      * 处理业务异常
@@ -35,6 +40,9 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.OK)
     public Result<Void> handleBusinessException(BusinessException e) {
         log.warn("业务异常: code={}, message={}", e.getCode(), e.getMessage());
+        operationLogService.recordEvent(
+            OperationEventType.ERROR, "WARN", "GlobalExceptionHandler",
+            "业务异常: " + e.getMessage(), e, null, "{\"code\":" + e.getCode() + "}");
         return Result.error(e.getCode(), e.getMessage());
     }
     
@@ -92,6 +100,9 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.OK)
     public Result<Void> handleResourceAccessException(ResourceAccessException e) {
         log.error("AI服务连接失败: {}", e.getMessage(), e);
+        operationLogService.recordEvent(
+            OperationEventType.AI_SERVICE, "ERROR", "GlobalExceptionHandler",
+            "AI服务连接失败: " + e.getMessage(), e, null, null);
         
         // 判断具体异常类型
         Throwable cause = e.getCause();
@@ -116,6 +127,9 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.OK)
     public Result<Void> handleRestClientException(RestClientException e) {
         log.error("AI服务调用失败: {}", e.getMessage(), e);
+        operationLogService.recordEvent(
+            OperationEventType.AI_SERVICE, "ERROR", "GlobalExceptionHandler",
+            "AI服务调用失败: " + e.getMessage(), e, null, null);
         
         String message = e.getMessage();
         if (message != null) {
@@ -167,6 +181,9 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.OK)
     public Result<Void> handleAuthenticationException(AuthenticationException e) {
         log.warn("认证失败: {}", e.getMessage());
+        operationLogService.recordEvent(
+            OperationEventType.AUTH, "WARN", "GlobalExceptionHandler",
+            "认证失败: " + e.getMessage(), e, null, null);
         return Result.error(ErrorCode.UNAUTHORIZED);
     }
 
@@ -188,6 +205,9 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.OK)
     public Result<Void> handleException(Exception e) {
         log.error("系统异常: {}", e.getMessage(), e);
+        operationLogService.recordEvent(
+            OperationEventType.ERROR, "ERROR", "GlobalExceptionHandler",
+            "系统异常: " + e.getMessage(), e, null, null);
         return Result.error(ErrorCode.INTERNAL_ERROR, "系统繁忙，请稍后重试");
     }
 }

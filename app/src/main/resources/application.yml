@@ -5,6 +5,29 @@ logging:
   charset:
     console: UTF-8
     file: UTF-8
+  level:
+    interview.guide: ${LOG_LEVEL_APP:INFO}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    org.springframework.ai: ${LOG_LEVEL_AI:INFO}
+    org.hibernate.SQL: ${LOG_LEVEL_HIBERNATE:WARN}
+  file:
+    name: logs/app.log
+
+# Actuator 健康检查与指标暴露
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true
 
 server:
   port: 8080
@@ -203,10 +226,17 @@ app:
       - /swagger-ui/**
       - /v3/api-docs/**
       - /webjars/**
+      - /actuator/**
     admin:
       username: ${ADMIN_USERNAME:admin}
       password: ${ADMIN_PASSWORD:admin123}
       email: ${ADMIN_EMAIL:admin@example.com}
+
+  # 监控告警配置
+  monitor:
+    notification:
+      enabled: ${MONITOR_NOTIFICATION_ENABLED:true}
+      webhook-url: ${ALERT_WEBHOOK_URL}
 
   # CORS配置 - React前端
   cors:

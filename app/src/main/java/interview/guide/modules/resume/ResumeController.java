@@ -122,15 +122,4 @@ public class ResumeController {
         return Result.success(null);
     }
 
-    /**
-     * 健康检查接口
-     */
-    @GetMapping("/api/resumes/health")
-    public Result<Map<String, String>> health() {
-        return Result.success(Map.of(
-            "status", "UP",
-            "service", "AI Interview Platform - Resume Service"
-        ));
-    }
-
 }

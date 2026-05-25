@@ -1,10 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!--
-      中文 Windows 下 file.encoding 常为 GBK，Spring Boot 默认 CONSOLE_LOG_CHARSET 会跟 file.encoding，
-      导致 UTF-8 终端里日志乱码。在引入 base.xml 之前固定为 UTF-8。
-    -->
-    <property name="CONSOLE_LOG_CHARSET" value="UTF-8"/>
-    <property name="FILE_LOG_CHARSET" value="UTF-8"/>
-    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+  <!-- 中文 Windows 下 file.encoding 常为 GBK，固定 UTF-8 避免乱码 -->
+  <property name="CONSOLE_LOG_CHARSET" value="UTF-8"/>
+  <property name="FILE_LOG_CHARSET" value="UTF-8"/>
+
+  <!-- 从 application.yml 读取应用名 -->
+  <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="app"/>
+
+  <!-- ==================== Console Appender（始终启用） ==================== -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder charset="${CONSOLE_LOG_CHARSET}">
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%level] [%X{traceId:-}] [%thread] %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- ==================== JSON File Appender（始终启用） ==================== -->
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/${APP_NAME}.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>logs/${APP_NAME}-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>50MB</maxFileSize>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>2GB</totalSizeCap>
+    </rollingPolicy>
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <customFields>{"service":"${APP_NAME}"}</customFields>
+      <includeMdcKeyName>traceId</includeMdcKeyName>
+    </encoder>
+  </appender>
+
+  <!-- ==================== 包级日志级别 ==================== -->
+  <logger name="interview.guide" level="${LOG_LEVEL_APP:-INFO}"/>
+  <logger name="org.springframework.security" level="${LOG_LEVEL_SECURITY:-WARN}"/>
+  <logger name="org.springframework.ai" level="${LOG_LEVEL_AI:-INFO}"/>
+  <logger name="org.hibernate.SQL" level="${LOG_LEVEL_HIBERNATE:-WARN}"/>
+
+  <!-- ==================== 根日志级别与输出目标 ==================== -->
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="FILE"/>
+  </root>
+
 </configuration>
