@@ -1,4 +1,5 @@
 import { request, getErrorMessage } from './request';
+import { tokenStorage } from '../utils/token';
 
 const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:8080';
 
@@ -120,7 +121,10 @@ export const ragChatApi = {
         `${API_BASE_URL}/api/rag-chat/sessions/${sessionId}/messages/stream`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(tokenStorage.getAccessToken() ? { 'Authorization': `Bearer ${tokenStorage.getAccessToken()}` } : {}),
+          },
           body: JSON.stringify({ question }),
         }
       );

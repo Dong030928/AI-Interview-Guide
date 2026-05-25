@@ -1,5 +1,5 @@
 import {getErrorMessage, request} from './request';
-import axios from 'axios';
+import { tokenStorage } from '../utils/token';
 
 const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:8080';
 
@@ -79,10 +79,10 @@ export const knowledgeBaseApi = {
      * 下载知识库文件
      */
     async downloadKnowledgeBase(id: number): Promise<Blob> {
-        const response = await axios.get(`${API_BASE_URL}/api/knowledgebase/${id}/download`, {
+        const response = await request.get(`/api/knowledgebase/${id}/download`, {
             responseType: 'blob',
         });
-        return response.data;
+        return response as unknown as Blob;
     },
 
   /**
@@ -195,6 +195,7 @@ export const knowledgeBaseApi = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(tokenStorage.getAccessToken() ? { 'Authorization': `Bearer ${tokenStorage.getAccessToken()}` } : {}),
         },
         body: JSON.stringify(req),
       });
