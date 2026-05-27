@@ -162,6 +162,13 @@ app:
         embedding-model: embedding-3
         embedding-dimensions: 1024
         supports-embedding: true
+      # 小米 MiMo（OpenAI 兼容） https://huggingface.co/XiaomiMiMo
+      mimo:
+        base-url: ${PROVIDER_MIMO_BASE_URL:http://localhost:8000/v1}
+        api-key: ${PROVIDER_MIMO_API_KEY:}
+        model: ${PROVIDER_MIMO_MODEL:mimo-v2.5-pro}
+        supports-embedding: false
+        temperature: ${PROVIDER_MIMO_TEMPERATURE:0.6}
     advisors:
       enabled: ${APP_AI_ADVISORS_ENABLED:true}
       tool-call-enabled: ${APP_AI_ADVISORS_TOOL_CALL_ENABLED:true}

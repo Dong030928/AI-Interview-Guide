@@ -28,6 +28,8 @@ public class LlmProviderBootstrapService {
   public void seedProvidersIfNecessary() {
     if (providerRepository.count() == 0) {
       seedProviders();
+    } else {
+      syncNewProvidersFromYaml();
     }
     ensureGlobalSetting();
   }
@@ -65,6 +67,45 @@ public class LlmProviderBootstrapService {
       providerRepository.save(entity);
     });
     log.info("Seeded {} LLM providers from application configuration", providerRepository.count());
+  }
+
+  private void syncNewProvidersFromYaml() {
+    Map<String, ProviderConfig> providers = properties.getProviders();
+    if (providers == null || providers.isEmpty()) {
+      return;
+    }
+    int added = 0;
+    for (Map.Entry<String, ProviderConfig> entry : providers.entrySet()) {
+      String id = entry.getKey();
+      ProviderConfig config = entry.getValue();
+      if (isBlank(id) || config == null || isBlank(config.getBaseUrl()) || isBlank(config.getModel())) {
+        continue;
+      }
+      if (providerRepository.existsById(id)) {
+        continue;
+      }
+      ApiKeyEncryptionService.EncryptedValue encrypted =
+          encryptionService.encrypt(config.getApiKey() != null ? config.getApiKey() : "");
+      boolean supportsEmbedding = Boolean.TRUE.equals(config.getSupportsEmbedding())
+          || !isBlank(config.getEmbeddingModel());
+      providerRepository.save(LlmProviderEntity.builder()
+          .id(id)
+          .baseUrl(config.getBaseUrl())
+          .apiKeyNonce(encrypted.nonce())
+          .apiKeyCiphertext(encrypted.ciphertext())
+          .model(config.getModel())
+          .embeddingModel(trimOrNull(config.getEmbeddingModel()))
+          .embeddingDimensions(resolveEmbeddingDimensions(config.getEmbeddingDimensions()))
+          .supportsEmbedding(supportsEmbedding)
+          .temperature(config.getTemperature())
+          .enabled(true)
+          .builtin(true)
+          .build());
+      added++;
+    }
+    if (added > 0) {
+      log.info("Synced {} new LLM provider(s) from application configuration", added);
+    }
   }
 
   private void ensureGlobalSetting() {

@@ -78,6 +78,14 @@ const PROVIDER_PRESETS: Record<string, {
     ],
     supportsEmbedding: false,
   },
+  mimo: {
+    baseUrl: 'http://localhost:8000/v1',
+    models: [
+      { value: 'mimo-v2.5-pro', label: 'MiMo-V2.5-Pro — 最新旗舰' },
+      { value: 'mimo-v2.5', label: 'MiMo-V2.5 — 标准版' },
+    ],
+    supportsEmbedding: false,
+  },
 };
 
 type ConfigRowProps = {
@@ -1093,7 +1101,7 @@ export default function SettingsPage() {
                         }
                       }}
                       disabled={!!editingProvider}
-                      placeholder="例如: dashscope, deepseek, glm, kimi"
+                      placeholder="例如: dashscope, deepseek, glm, kimi, mimo"
                       className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600
                         bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white
                         placeholder:text-slate-400 focus:outline-none focus:ring-2
